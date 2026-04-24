@@ -41,14 +41,19 @@ class WhisperEngine:
         dummy = np.zeros(16000, dtype=np.float32)
         mlx_whisper.transcribe(dummy, path_or_hf_repo=self._repo)
 
-    def transcribe(self, audio: np.ndarray) -> str:
-        """Transcribe audio and return cleaned text, or empty string on silence."""
+    def transcribe(self, audio: np.ndarray, initial_prompt: str | None = None) -> str:
+        """Transcribe audio and return cleaned text, or empty string on silence.
+
+        initial_prompt overrides config.initial_prompt for this call — used by the
+        streaming transcriber to pass prior-chunk context to Whisper.
+        """
         kwargs = dict(
             path_or_hf_repo=self._repo,
             language=self.config.language,
         )
-        if self.config.initial_prompt:
-            kwargs["initial_prompt"] = self.config.initial_prompt
+        prompt = initial_prompt if initial_prompt is not None else self.config.initial_prompt
+        if prompt:
+            kwargs["initial_prompt"] = prompt
         result = mlx_whisper.transcribe(audio, **kwargs)
         text = result.get("text", "").strip()
 

@@ -65,10 +65,12 @@ class HotkeyRecorder:
 
     def __init__(self, config,
                  on_recording_start: Callable | None = None,
-                 on_utterance: Callable | None = None):
+                 on_utterance: Callable | None = None,
+                 on_chunk: Callable | None = None):
         self.config = config
         self._on_start    = on_recording_start
         self._on_utterance = on_utterance
+        self._on_chunk    = on_chunk
 
         self._capture = AudioCapture(config.audio)
 
@@ -121,6 +123,8 @@ class HotkeyRecorder:
 
             if held:
                 self._buffer.append(chunk)
+                if self._on_chunk:
+                    self._on_chunk(chunk)
 
             self._was_held = held
 

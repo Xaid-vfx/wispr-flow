@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from pipeline.command_detector import strip_llm_prefix
+from transcription.streaming import StreamingTranscriber
 
 
 # ── Events (sent to main thread for display) ──────────────────────────────────
@@ -58,6 +59,8 @@ class HotkeyPipeline:
         self._paster    = paster
         self._config    = config
 
+        self._streaming = StreamingTranscriber(whisper, config.audio.sample_rate)
+
         self._utt_queue: queue.Queue   = queue.Queue()
         self._event_queue: queue.Queue = queue.Queue()
         self._stop = threading.Event()
@@ -71,6 +74,7 @@ class HotkeyPipeline:
         # Wire recorder callbacks into this pipeline
         self._recorder._on_start     = self._on_recording_start
         self._recorder._on_utterance = self._on_utterance_ready
+        self._recorder._on_chunk     = self._on_audio_chunk
 
         self._proc_thread = threading.Thread(
             target=self._processing_loop, name="hk-proc", daemon=True
@@ -93,7 +97,11 @@ class HotkeyPipeline:
     # ── Recorder callbacks (called from recorder threads) ─────────────────────
 
     def _on_recording_start(self):
+        self._streaming.start()
         self._event_queue.put(HotkeyRecordingStarted())
+
+    def _on_audio_chunk(self, chunk):
+        self._streaming.add_chunk(chunk)
 
     def _on_utterance_ready(self, utterance, target_app):
         self._utt_queue.put((utterance, target_app))
@@ -115,7 +123,7 @@ class HotkeyPipeline:
 
     def _process(self, utterance, target_app_name) -> Optional[HotkeyResult]:
         t0  = time.perf_counter()
-        raw = self._whisper.transcribe(utterance.audio)
+        raw, _tail_seconds = self._streaming.finalize()
         t_whisper = time.perf_counter() - t0
 
         if not raw:
