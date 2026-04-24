@@ -16,6 +16,7 @@ import numpy as np
 import sounddevice as sd
 
 from config import Config
+from vocab import load_vocab, VOCAB_FILE
 from audio.capture import AudioCapture
 from audio.vad import EnergyVAD
 from audio.hotkey_recorder import HotkeyRecorder
@@ -307,6 +308,15 @@ def main():
     config.debug         = args.debug
     if args.no_llm:
         config.llm.enabled = False
+
+    # Load personal vocabulary as Whisper's initial_prompt. --prompt overrides.
+    vocab_prompt, vocab_count = load_vocab()
+    if vocab_prompt:
+        config.whisper.initial_prompt = vocab_prompt
+        print(f"  [vocab] {vocab_count} entries from {VOCAB_FILE}")
+    else:
+        print(f"  [vocab] no entries yet — edit {VOCAB_FILE} to add words")
+
     if args.prompt is not None:
         config.whisper.initial_prompt = args.prompt
     if args.threshold is not None:
