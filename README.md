@@ -28,7 +28,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # 3. Pull a model for LLM rewriting (only needed for delta prefix)
-ollama pull dolphin3
+ollama pull llama3.2:3b
 ```
 
 ## Run
@@ -63,7 +63,7 @@ Grant **Accessibility** permission when prompted (required for auto-paste).
 | `--hotkey` | off | Push-to-talk mode |
 | `--hotkey-key` | `right_option` | Key to hold (`right_cmd`, `right_ctrl`, etc.) |
 | `--model` | `medium.en` | Whisper model (`tiny.en` → `large-v3`) |
-| `--llm-model` | `dolphin3` | Ollama model for delta rewriting |
+| `--llm-model` | `llama3.2:3b` | Ollama model for delta rewriting |
 | `--prompt` | — | Initial prompt to bias Whisper |
 | `--debug` | off | Show raw Whisper transcript |
 | `--threshold` | `0.015` | VAD energy threshold |

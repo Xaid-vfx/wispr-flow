@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--debug",     action="store_true", help="Show raw transcript too")
     parser.add_argument("--model",     default="medium.en",
                         choices=["tiny.en", "base.en", "small.en", "medium.en", "large-v3"])
-    parser.add_argument("--llm-model", default="dolphin3")
+    parser.add_argument("--llm-model", default="llama3.2:3b")
     parser.add_argument("--threshold", type=float, default=None,
                         help="VAD energy threshold (continuous mode only)")
     parser.add_argument("--prompt", type=str, default=None, metavar="TEXT",

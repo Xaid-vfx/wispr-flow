@@ -24,7 +24,7 @@ class WhisperConfig:
 
 @dataclass
 class LLMConfig:
-    model: str = "dolphin3"
+    model: str = "llama3.2:3b"
     base_url: str = "http://localhost:11434"
     enabled: bool = False    # default raw; "delta," prefix or "hey dictation rewrite mode" enables LLM
     temperature: float = 0.3

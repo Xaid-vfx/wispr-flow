@@ -1,7 +1,7 @@
 """
 Integration tests for the LLM rewriter.
 
-Requires: Ollama running with dolphin3 (or another model) available.
+Requires: Ollama running with llama3.2:3b (or another model) available.
 Tests that need Ollama are auto-skipped if it's unreachable.
 """
 
@@ -13,7 +13,7 @@ from config import LLMConfig
 
 @pytest.fixture(scope="module")
 def rewriter():
-    r = LLMRewriter(LLMConfig(model="dolphin3"))
+    r = LLMRewriter(LLMConfig(model="llama3.2:3b"))
     r.load()
     return r
 
