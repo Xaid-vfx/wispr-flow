@@ -26,6 +26,12 @@ class HotkeyRecordingStarted:
 
 
 @dataclass
+class HotkeyProcessing:
+    """Hotkey released — utterance is queued for transcription."""
+    pass
+
+
+@dataclass
 class HotkeyResult:
     raw:       str
     cleaned:   str
@@ -103,6 +109,7 @@ class HotkeyPipeline:
         self._streaming.add_chunk(chunk)
 
     def _on_utterance_ready(self, utterance, target_app):
+        self._event_queue.put(HotkeyProcessing())
         self._utt_queue.put((utterance, target_app))
 
     # ── Processing thread ─────────────────────────────────────────────────────

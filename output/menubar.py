@@ -9,7 +9,13 @@ States:
 
 import rumps
 
-from pipeline.hotkey_pipeline import HotkeyRecordingStarted, HotkeyResult, HotkeyWarning
+from output.overlay import DictationOverlay
+from pipeline.hotkey_pipeline import (
+    HotkeyProcessing,
+    HotkeyRecordingStarted,
+    HotkeyResult,
+    HotkeyWarning,
+)
 
 _IDLE        = "⌥"
 _RECORDING   = "⏺"
@@ -31,6 +37,7 @@ class DictationMenubar(rumps.App):
         self._paster       = paster
         self._config       = config
         self._reset_timer  = None
+        self._overlay      = DictationOverlay()
 
         self.menu = [rumps.MenuItem("Quit", callback=self._on_quit)]
 
@@ -40,18 +47,28 @@ class DictationMenubar(rumps.App):
     # ── Event polling ─────────────────────────────────────────────────────────
 
     def _poll(self, _):
-        event = self._pipeline.get_event(timeout=0)
-        if event is None:
-            return
+        try:
+            event = self._pipeline.get_event(timeout=0)
+            if event is None:
+                return
 
-        if isinstance(event, HotkeyRecordingStarted):
-            self.title = _RECORDING
+            if isinstance(event, HotkeyRecordingStarted):
+                self.title = _RECORDING
+                self._overlay.show_recording()
 
-        elif isinstance(event, HotkeyResult):
-            self._show_result(event)
+            elif isinstance(event, HotkeyProcessing):
+                self._overlay.show_processing()
 
-        elif isinstance(event, HotkeyWarning):
-            print(f"\n  ⚠  {event.message}\n", flush=True)
+            elif isinstance(event, HotkeyResult):
+                self._show_result(event)
+                self._overlay.show_done(event.cleaned)
+
+            elif isinstance(event, HotkeyWarning):
+                print(f"\n  ⚠  {event.message}\n", flush=True)
+        except Exception as e:
+            # Never let a handler exception kill the rumps timer — if it dies,
+            # the whole UI freezes. Log and move on.
+            print(f"  [poll error: {e}]", flush=True)
 
     def _show_result(self, event: HotkeyResult):
         self.title = _DONE
@@ -85,6 +102,7 @@ class DictationMenubar(rumps.App):
 
     def _on_quit(self, _):
         print("\nStopping...")
+        self._overlay.hide()
         self._pipeline.stop()
         if self._paster:
             self._paster.stop()
