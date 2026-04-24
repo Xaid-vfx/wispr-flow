@@ -51,11 +51,10 @@ class HotkeyPipeline:
     drives Whisper → (delta: LLM) → paste for each utterance.
     """
 
-    def __init__(self, recorder, whisper, rewriter, context, paster, config):
+    def __init__(self, recorder, whisper, rewriter, paster, config):
         self._recorder  = recorder
         self._whisper   = whisper
         self._rewriter  = rewriter
-        self._context   = context
         self._paster    = paster
         self._config    = config
 
@@ -133,13 +132,10 @@ class HotkeyPipeline:
 
         t1 = time.perf_counter()
         if is_llm:
-            ctx     = self._context.get_context()
-            cleaned = self._rewriter.rewrite(text, context=ctx)
+            cleaned = self._rewriter.rewrite(text)
             t_llm   = time.perf_counter() - t1
         else:
             cleaned, t_llm = text, 0.0
-
-        self._context.add(cleaned)
 
         # Paste into the app that was focused when the key was pressed
         pasted   = False

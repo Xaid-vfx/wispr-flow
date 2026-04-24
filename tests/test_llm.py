@@ -52,25 +52,13 @@ def test_returns_string_not_prompt(rewriter):
     skip_if_offline(rewriter)
     result = rewriter.rewrite("this is a test")
     assert "Raw speech input" not in result
-    assert "Context" not in result
     assert "Cleaned text" not in result
 
 
-def test_context_passed_without_crash(rewriter):
-    """Passing context must not crash and must still return a string."""
+def test_simple_input_works(rewriter):
+    """Basic input should come back as a non-empty string."""
     skip_if_offline(rewriter)
-    result = rewriter.rewrite(
-        transcript="we should ship it next week",
-        context="We discussed the product release schedule yesterday.",
-    )
-    assert isinstance(result, str)
-    assert len(result) > 5
-
-
-def test_no_context_works(rewriter):
-    """No context (empty string) must work as a first utterance."""
-    skip_if_offline(rewriter)
-    result = rewriter.rewrite("hello this is the first thing i said", context="")
+    result = rewriter.rewrite("hello this is the first thing i said")
     assert isinstance(result, str)
     assert len(result) > 0
 

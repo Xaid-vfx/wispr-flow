@@ -8,19 +8,12 @@ Rules:
 - Fix grammar, punctuation, and capitalization
 - Remove filler words (um, uh, like, you know) unless they seem intentional
 - Preserve the original meaning exactly — do not add, remove, or reinterpret ideas
-- Match the tone implied by the context (casual, professional, etc.)
 - Return ONLY the cleaned text — no explanations, no quotes, no commentary
 - If the input is already clean, return it as-is
-- CRITICAL: The context shows previous sentences only to help resolve references \
-(e.g. "that", "it", "them"). Do NOT use context to expand, lengthen, or add \
-information that is not present in the raw speech input. Your output must be \
-derivable entirely from the raw speech input alone. If the input is short, the \
-output must also be short."""
+- Your output must be derivable entirely from the raw speech input. If the input \
+is short, the output must also be short."""
 
 USER_TEMPLATE = """\
-Context (what was said before — use this to resolve ambiguous references):
-{context}
-
 Raw speech input:
 {transcript}
 
@@ -45,9 +38,9 @@ class LLMRewriter:
             print(f"  Warning: LLM not reachable ({e}). Delta prefix will fall back to raw.", flush=True)
             self._client = None
 
-    def rewrite(self, transcript: str, context: str = "") -> str:
+    def rewrite(self, transcript: str) -> str:
         """
-        Rewrite a raw transcript using context from previous sentences.
+        Rewrite a raw transcript into clean written text.
         Falls back to the raw transcript if LLM is unavailable.
         """
         transcript = transcript.strip()
@@ -57,10 +50,7 @@ class LLMRewriter:
             print("  ⚠  LLM not connected — delta prefix ignored. Is Ollama running?", flush=True)
             return transcript
 
-        prompt = USER_TEMPLATE.format(
-            context=context if context else "(none — this is the start of the session)",
-            transcript=transcript,
-        )
+        prompt = USER_TEMPLATE.format(transcript=transcript)
 
         try:
             response = self._client.generate(

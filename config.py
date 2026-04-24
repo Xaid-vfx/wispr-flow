@@ -32,11 +32,6 @@ class LLMConfig:
 
 
 @dataclass
-class ContextConfig:
-    max_sentences: int = 5
-
-
-@dataclass
 class HotkeyConfig:
     # Key to hold while speaking.
     # Options: right_option | right_cmd | right_ctrl | right_shift | f13 | f14
@@ -49,6 +44,5 @@ class Config:
     audio: AudioConfig = field(default_factory=AudioConfig)
     whisper: WhisperConfig = field(default_factory=WhisperConfig)
     llm: LLMConfig = field(default_factory=LLMConfig)
-    context: ContextConfig = field(default_factory=ContextConfig)
     hotkey: HotkeyConfig = field(default_factory=HotkeyConfig)
     debug: bool = False   # show raw transcript before LLM rewrite

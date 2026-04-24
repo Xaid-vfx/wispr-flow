@@ -21,7 +21,6 @@ from audio.vad import EnergyVAD
 from audio.hotkey_recorder import HotkeyRecorder
 from transcription.engine import WhisperEngine
 from llm.rewriter import LLMRewriter
-from pipeline.context_manager import ContextManager
 from pipeline.processor import AsyncPipeline, SpeechStarted, ProcessingResult, ProcessingWarning
 from pipeline.hotkey_pipeline import HotkeyPipeline, HotkeyRecordingStarted, HotkeyResult, HotkeyWarning
 from output.paster import AutoPaster, check_accessibility, print_accessibility_instructions
@@ -168,12 +167,11 @@ def run_hotkey_mode(args, config, paster):
 
     whisper  = WhisperEngine(config.whisper)
     rewriter = LLMRewriter(config.llm)
-    context  = ContextManager(config.context)
 
     whisper.load()
     rewriter.load()
 
-    pipeline = HotkeyPipeline(recorder, whisper, rewriter, context, paster, config)
+    pipeline = HotkeyPipeline(recorder, whisper, rewriter, paster, config)
 
     key_label = {
         "right_option": "Right ⌥ Option",
@@ -210,12 +208,11 @@ def run_continuous_mode(args, config, paster, paste_enabled):
     vad      = EnergyVAD(config.audio)
     whisper  = WhisperEngine(config.whisper)
     rewriter = LLMRewriter(config.llm)
-    context  = ContextManager(config.context)
 
     whisper.load()
     rewriter.load()
 
-    pipeline = AsyncPipeline(capture, vad, whisper, rewriter, context, config)
+    pipeline = AsyncPipeline(capture, vad, whisper, rewriter, config)
 
     if paste_enabled and not args.target and not args.hotkey:
         detected = paster.auto_detect()

@@ -13,8 +13,7 @@ import pytest
 
 from audio.vad import EnergyVAD
 from pipeline.processor import AsyncPipeline, SpeechStarted, ProcessingResult, ProcessingWarning
-from pipeline.context_manager import ContextManager
-from config import AudioConfig, ContextConfig
+from config import AudioConfig
 
 
 # ── Fakes ─────────────────────────────────────────────────────────────────────
@@ -58,7 +57,7 @@ class FakeLLM:
     def __init__(self):
         self.config = type("cfg", (), {"enabled": True})()
 
-    def rewrite(self, transcript: str, context: str = "") -> str:
+    def rewrite(self, transcript: str) -> str:
         return transcript.capitalize() + "."
 
 
@@ -108,14 +107,13 @@ def build_pipeline(chunks, whisper=None, llm=None, audio_cfg=None):
     vad   = EnergyVAD(cfg)
     wh    = whisper or FakeWhisper()
     rw    = llm or FakeLLM()
-    ctx   = ContextManager(ContextConfig(max_sentences=5))
 
     class _Config:
         debug = False
         class llm:
             enabled = True
 
-    return AsyncPipeline(cap, vad, wh, rw, ctx, _Config())
+    return AsyncPipeline(cap, vad, wh, rw, _Config())
 
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
@@ -196,31 +194,6 @@ def test_two_utterances_produce_two_results():
 
     results = [e for e in events if isinstance(e, ProcessingResult)]
     assert len(results) == 2
-
-
-def test_context_accumulates_across_utterances():
-    """Second utterance's context should contain first utterance's output."""
-    received_contexts = []
-
-    class CapturingLLM:
-        def __init__(self):
-            self.config = type("cfg", (), {"enabled": True})()
-        def rewrite(self, transcript, context=""):
-            received_contexts.append(context)
-            return transcript
-
-    chunks = (
-        loud_chunks(20) + silent_chunks(15) +
-        loud_chunks(20) + silent_chunks(15)
-    )
-    pipeline = build_pipeline(chunks, whisper=FakeWhisperDelta(), llm=CapturingLLM())
-    pipeline.start()
-    drain_events(pipeline, timeout_total=12.0)
-    pipeline.stop()
-
-    assert len(received_contexts) >= 2
-    # Second call's context should contain first result
-    assert "hello world" in received_contexts[1]
 
 
 def test_stop_is_clean():

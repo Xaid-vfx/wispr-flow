@@ -45,12 +45,11 @@ Event = Union[SpeechStarted, ProcessingResult, ProcessingWarning]
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
 class AsyncPipeline:
-    def __init__(self, capture, vad, whisper, rewriter, context, config):
+    def __init__(self, capture, vad, whisper, rewriter, config):
         self._capture  = capture
         self._vad      = vad
         self._whisper  = whisper
         self._rewriter = rewriter
-        self._context  = context
         self._config   = config
 
         # utterance_queue: VAD thread → processing thread
@@ -153,13 +152,10 @@ class AsyncPipeline:
 
         t1 = time.perf_counter()
         if is_llm:
-            ctx = self._context.get_context()
-            cleaned = self._rewriter.rewrite(text, context=ctx)
+            cleaned = self._rewriter.rewrite(text)
             t_llm = time.perf_counter() - t1
         else:
             cleaned, t_llm = text, 0.0
-
-        self._context.add(cleaned)
 
         return ProcessingResult(
             raw=raw,
